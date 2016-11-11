@@ -19,9 +19,13 @@ var requirejs, require, define;
     var req, s, head, baseElement, dataMain, src,
         interactiveScript, currentlyAddingScript, mainScript, subPath,
         version = '2.3.2',
+        //代码注释的正则
         commentRegExp = /\/\*[\s\S]*?\*\/|([^:"'=]|^)\/\/.*$/mg,
+        //require方法的正则
         cjsRequireRegExp = /[^.]\s*require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
+        //js文件类型后缀的正则
         jsSuffixRegExp = /\.js$/,
+        //当前路径的正则
         currDirRegExp = /^\.\//,
         //对象的prototype
         op = Object.prototype,
@@ -30,12 +34,23 @@ var requirejs, require, define;
         hasOwn = op.hasOwnProperty,
         //如果typeof window存在且typeof navigator存在且window.document为真，可以认为当前运行环境是browser
         isBrowser = !!(typeof window !== 'undefined' && typeof navigator !== 'undefined' && window.document),
-        //如果不是浏览器，并且typeof
+        /**
+         *如果不是浏览器，并且typeof importScripts不是undefined，说明是webWorker
+         *(webWorker内部使用improtScripts方法，将worker分成不同文件)
+         * @reference https://developer.mozilla.org/zh-CN/docs/Web/API/WorkerGlobalScope/importScripts
+         * http://blog.sina.com.cn/s/blog_7256fe8f01017ovx.html 
+         * http://www.cnblogs.com/_franky/archive/2010/11/23/1885773.html
+         */
         isWebWorker = !isBrowser && typeof importScripts !== 'undefined',
         //PS3 indicates loaded and complete, but need to wait for complete
         //specifically. Sequence is 'loading', 'loaded', execution,
         // then 'complete'. The UA check is unfortunate, but not sure how
         //to feature test w/o causing perf issues.
+        /**
+         * ready状态的正则
+         * PS3上的ready标识有loaded和complate，但是需要等待complete状态
+         * 需要特别明确的是：顺序是 loading loaded excution 然后是complete
+         */
         readyRegExp = isBrowser && navigator.platform === 'PLAYSTATION 3' ?
         /^complete$/ : /^(complete|loaded)$/,
         defContextName = '_',
@@ -426,7 +441,12 @@ var requirejs, require, define;
          */
         function removeScript(name) {
             if (isBrowser) {
+                //循环页面内的script节点
                 each(scripts(), function(scriptNode) {
+                    /**
+                     *如果scriptNode的data-requiremodule属性值等于name 且data-requirecontext属性值等于context.contextName
+                     *移除该scriptNode节点，返回true
+                     */
                     if (scriptNode.getAttribute('data-requiremodule') === name &&
                         scriptNode.getAttribute('data-requirecontext') === context.contextName) {
                         scriptNode.parentNode.removeChild(scriptNode);
@@ -457,6 +477,10 @@ var requirejs, require, define;
         //Turns a plugin!resource to [plugin, resource]
         //with the plugin being undefined if the name
         //did not have a plugin prefix.
+
+        /*
+         *分割前缀
+         */
         function splitPrefix(name) {
             var prefix,
                 index = name ? name.indexOf('!') : -1;
@@ -563,6 +587,9 @@ var requirejs, require, define;
             };
         }
 
+        /**
+         * 获取模块
+         */
         function getModule(depMap) {
             var id = depMap.id,
                 mod = getOwn(registry, id);
@@ -593,6 +620,9 @@ var requirejs, require, define;
             }
         }
 
+        /**
+         * 定义错误处理函数
+         */
         function onError(err, errback) {
             var ids = err.requireModules,
                 notified = false;
@@ -670,6 +700,9 @@ var requirejs, require, define;
             }
         };
 
+        /**
+         *清理注册表
+         */
         function cleanRegistry(id) {
             //Clean up machinery used for waiting modules.
             delete registry[id];
