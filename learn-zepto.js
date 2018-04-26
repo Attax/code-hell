@@ -1,4 +1,3 @@
-
 /* Zepto v1.2.0 - zepto event ajax form ie - zeptojs.com/license */
 (function(global, factory) {
 	//如果支持AMD标准，使用AMD标准封装	
@@ -242,16 +241,31 @@
     return zepto.init(selector, context)
   }
 
+
+  /**
+  * 封装extend方法，拷贝方法，三个参数分别是目标对象，源对象，是否深拷贝
+  */
   function extend(target, source, deep) {
+  	//循环源对象
     for (key in source)
+    //如果是深拷贝，并且源对象的元素是也是Object或Array
       if (deep && (isPlainObject(source[key]) || isArray(source[key]))) {
+
+      	//如果源对象的元素是Ojbect，并且目标对象元素不是Object，
         if (isPlainObject(source[key]) && !isPlainObject(target[key]))
+        	//先设置模板对象元素为Object
           target[key] = {}
+      	//如果源对象的元素是Array，并且目标对象元素不是Array
         if (isArray(source[key]) && !isArray(target[key]))
+        	//先设置目标对象元素为Array
           target[key] = []
+          //然后再调用extend方法本身，将目标对象元素，源对象元素，
         extend(target[key], source[key], deep)
       }
+      //如果不是，直接将元素对应设置到target对象元素中
       else if (source[key] !== undefined) target[key] = source[key]
+
+
   }
 
   // Copy all but undefined properties from one or more
@@ -322,6 +336,7 @@
   }
 
   function setAttribute(node, name, value) {
+  	//如果没有传入属性值，直接移除该属性，否则，设置该属性
     value == null ? node.removeAttribute(name) : node.setAttribute(name, value)
   }
 
@@ -363,6 +378,8 @@
   $.isArray = isArray
   $.isPlainObject = isPlainObject
 
+
+  //判断一个对象是否为空（没有属性）
   $.isEmptyObject = function(obj) {
     var name
     for (name in obj) return false
@@ -376,14 +393,32 @@
       !isNaN(num) && isFinite(num) || false
   }
 
+  //判断是否在数组内
   $.inArray = function(elem, array, i){
+  	//return [].indexOf.call(array,element,i)
     return emptyArray.indexOf.call(array, elem, i)
   }
 
   $.camelCase = camelize
+
+  /**
+  * trim方法，直接调用String自身的方法，
+  * ES3中，需要自己实现trim
+		
+		$.trim=function(str){
+			return null?:'':(String.prototype.trim?String.prototype.trim.call(str): str.replace(/(^\s*)|(\s*$)/g, ''));
+		}
+
+  */
   $.trim = function(str) {
+  	
     return str == null ? "" : String.prototype.trim.call(str)
+
   }
+
+
+
+
 
   // plugin compatibility
   $.uuid = 0
