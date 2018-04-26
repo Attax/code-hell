@@ -53,7 +53,11 @@
       'contenteditable': 'contentEditable'
     },
 	
-	//判断是否是数组，如果数组支持，调用Array自身的isArray方法，如果没有，使用instanceof Array
+	/**
+	* 判断是否是数组，如果数组支持，
+	* 调用Array自身的isArray方法，
+	* 如果没有，使用instanceof Array
+	*/
     isArray = Array.isArray ||
       function(object){ return object instanceof Array }
 
@@ -270,13 +274,27 @@
 
   // Copy all but undefined properties from one or more
   // objects to the `target` object.
+  /**
+  * 给$对象添加对象拷贝方法
+  * target为第一个参数，只是形参，换成bullshit也可以
+  */
+  
   $.extend = function(target){
+	//创建变量deep,记录是深拷贝
+	//args为第二个参数开始的数组
     var deep, args = slice.call(arguments, 1)
+	//如果第一个参数为布尔值
     if (typeof target == 'boolean') {
+		//deep的值就为$.extend方法传入的第一个参数
       deep = target
+	  //target等于args调用unshift方法，从头部删除掉的元素，
+	  //也就是$.extend方法的第二个参数
       target = args.shift()
     }
+	
+	//对剩下的元素，循环调用上面定义好的extend方法
     args.forEach(function(arg){ extend(target, arg, deep) })
+	//返回extend后的目标元素
     return target
   }
 
@@ -402,13 +420,12 @@
   $.camelCase = camelize
 
   /**
-  * trim方法，直接调用String自身的方法，
-  * ES3中，需要自己实现trim
-		
+	* trim方法，直接调用String自身的方法，
+	* ES3中，需要自己实现trim
+	*	
 		$.trim=function(str){
 			return null?:'':(String.prototype.trim?String.prototype.trim.call(str): str.replace(/(^\s*)|(\s*$)/g, ''));
 		}
-
   */
   $.trim = function(str) {
   	
@@ -426,8 +443,17 @@
   $.expr = { }
   $.noop = function() {}
 
+	/**
+	* 封装map方法，参数为元素，回调函数callback,
+	* 回调函数有两个参数（value和key或者item和index） ,
+	* 第一个参数是当前的元素项，
+	* 第二个参数为当前元素索引
+	* 循环结束后，返回回调函数调用过后的返回值组成的新数组
+	*/
   $.map = function(elements, callback){
     var value, values = [], i, key
+	
+	//如果是类数组元素，直接使用for循环,
     if (likeArray(elements))
       for (i = 0; i < elements.length; i++) {
         value = callback(elements[i], i)
@@ -1402,6 +1428,7 @@ window.$ === undefined && (window.$ = Zepto)
     return xhr
   }
 
+  //定义ajax默认配置项
   $.ajaxSettings = {
     // Default type of request
     type: 'GET',
