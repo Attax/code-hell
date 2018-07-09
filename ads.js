@@ -1,8 +1,6 @@
 (function(){
 	//ADS命名空间
-	if(!window.ADS){
-		window.ADS={};
-	}
+	var ads=function(){};
 	
 	function isCompatible(other){
 		//能力检测
@@ -18,7 +16,7 @@
 		return true;
 	}
 
-	window.ADS.isCompatible=isCompatible;
+	
 	
 	function $(){
 		var elements=new Array();
@@ -45,7 +43,7 @@
 		
 	}
 	
-	window.ADS.$=$;
+	
 	
 	function addEvent(node,type,listener){
 		//兼容性监测，平稳降级
@@ -73,7 +71,7 @@
 		
 	}
 	
-	window.ADS.addEvent=addEvent;
+	
 	
 	function removeEvent(node,type,listener){
 		if(!(node=$(node))){return false;}
@@ -93,7 +91,7 @@
 		return false;
 	}
 	
-	window.ADS.removeEvent=removeEvent;
+	
 	
 	
 	function getElementsByClassName(className,tag,parent){
@@ -128,10 +126,10 @@
 		
 	}
 	
-	window.ADS.getElementsByClassName=getElementsByClassName;
+	
 	
 	function toggleDisplay(node,value){
-		if(!(node=$(node)){return false;}
+		if(!(node=$(node))){return false;}
 		if(node.style.display!=='none'){
 			node.style.display='none';
 		}else{
@@ -141,19 +139,19 @@
 		return true;
 	}
 	
-	window.ADS.toggleDisplay=toggleDisplay;
+	
 	
 	function insertAfter(node,referenceNode){
-		if(!(node=$(node)) return false;
-		if(!(referenceNode=$(referenceNode)) return false;
+		if(!(node=$(node))) return false;
+		if(!(referenceNode=$(referenceNode))) return false;
 		return referenceNode.parentNode.insertBefore(node,referenceNode.nextSibling)
 	}
 	
-	window.ADS.insertAfter=insertAfter;
+	
 	
 	
 	function removeChildren(parent){
-		if(!(parent=$(parent)) return false;
+		if(!(parent=$(parent))) return false;
 		
 		//存在该子节点时删除该子节点
 		while(parent.firstChild){
@@ -164,11 +162,11 @@
 		return parent;
 	}
 	
-	window.ADS.removeChildren=removeChildren;
+	
 	
 	function prependChild(parent,newChild){
-		if(!(parent=$(parent)) return false;
-		if(!(newChild=$(newChild)) return false;
+		if(!(parent=$(parent))) return false;
+		if(!(newChild=$(newChild))) return false;
 		
 		
 		if(parent.firstChild){
@@ -182,6 +180,48 @@
 		return parent;
 	}
 	
-	window.ADS.prependChild=prependChild;
+	function trim(){
+		if(!String.trim){
+			String.prototype.trim=function(){
+				return this.replace(/^\s+|\s+$/g,'');
+			}
+		}
+	}
+	
+	function repeat(){
+		if(!String.repeat){
+			//按照指定的次数，重复字符串
+			String.prototype.repeat=function(len){
+				return new Array(len+1).join(this);
+			}
+		}
+	}
+	
+	//将css驼峰属性转成JS 属性 font-size => fontSize background-color => backgroundColor
+	function camelize(s){
+		return s.replace(/-(\w)/g,function(strMatch,p1){
+			return p1.toUpperCase();
+		})
+	}
+
+	ads.prototype={
+		$:$,
+		getElementsByClassName:getElementsByClassName,
+		toggleDisplay:toggleDisplay,
+		isCompatible:isCompatible,
+		addEvent:addEvent,
+		removeEvent:removeEvent,
+		removeChildren:removeChildren,
+		insertAfter:insertAfter,
+		prependChild:prependChild
+		
+	}
+	
+
+	window.ADS=new ads();
+	
+	alert(window.ADS.addEvent)
+	
+
 	
 })()
