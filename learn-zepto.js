@@ -334,6 +334,12 @@
     return selector == null ? $(nodes) : $(nodes).filter(selector)
   }
 
+  //定义contains方法
+  /**
+  * 如果支持contains方法，直接使用dom方法contains,
+  * 否则判断node的父节点是否和parent相同，
+  * 如果相同返回true，不同继续向父节点的父节点判断，一直到最顶层
+  */
   $.contains = document.documentElement.contains ?
     function(parent, node) {
       return parent !== node && parent.contains(node)
@@ -348,6 +354,7 @@
     return isFunction(arg) ? arg.call(context, idx, payload) : arg
   }
 
+  //设置属性方法，如果value为null,移除该属性，否则设置该属性
   function setAttribute(node, name, value) {
     value == null ? node.removeAttribute(name) : node.setAttribute(name, value)
   }
@@ -384,12 +391,14 @@
     }
   }
 
+  //给$添加方法，对应的方法定义在上面
   $.type = type
   $.isFunction = isFunction
   $.isWindow = isWindow
   $.isArray = isArray
   $.isPlainObject = isPlainObject
 
+  //判断是否是空对象
   $.isEmptyObject = function(obj) {
     var name
     for (name in obj) return false
@@ -403,6 +412,7 @@
       !isNaN(num) && isFinite(num) || false
   }
 
+  //通过indexOf方法判断元素是否在数组内
   $.inArray = function(elem, array, i){
     return emptyArray.indexOf.call(array, elem, i)
   }
@@ -435,6 +445,12 @@
     return flatten(values)
   }
 
+  /**
+  * 定义each方法，
+  * 如果是类数组，用for循环，否则，用for in循环
+  * 使用call方法调用callback,并将循环中的key/value 或者说item/index传入作为参数
+  * value作为call方法的第一个参数，也就是callback的this指向，所以$.each中的$(this)是value(item)
+  */
   $.each = function(elements, callback){
     var i, key
     if (likeArray(elements)) {
