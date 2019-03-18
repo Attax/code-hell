@@ -59,7 +59,9 @@ var requirejs, require, define;
          * 检测opera浏览器
          */
         isOpera = typeof opera !== 'undefined' && opera.toString() === '[object Opera]',
+		//存储运行环境上下文
         contexts = {},
+		//用来存储requirejs的配置
         cfg = {},
         globalDefQueue = [],
         useInteractive = false;
@@ -169,20 +171,28 @@ var requirejs, require, define;
      * but only if target does not already have a property of the same name.
      */
     /**
-     * 把源对象的属性混合到目标对象中
-     * 只有当目标对象没有同名属性时，才混合，如果有，使用目标对象自身的属性
+     * 把源对象的属性混合（添加）到目标对象中
+     * force为true时，或者当目标对象没有同名属性时，才混合，如果有，使用目标对象自身的属性
+	 * deepStringMixin 表示深拷贝，如果为true,深度拷贝
      */
     function mixin(target, source, force, deepStringMixin) {
         if (source) {
             eachProp(source, function(value, prop) {
+				//force为true，或者目标对象没有源对象属性，把源对象的属性添加到模板对象上
                 if (force || !hasProp(target, prop)) {
+					//深度拷贝参数为true,并且属性值是对象，属性为true，且属性值不是数组和函数也不是正则对象时，
+					
                     if (deepStringMixin && typeof value === 'object' && value &&
                         !isArray(value) && !isFunction(value) &&
                         !(value instanceof RegExp)) {
-
+						//如果目标对象没有对应属性，
+						//先设置模板对象的属性为空对象，
+					
                         if (!target[prop]) {
                             target[prop] = {};
                         }
+						//然后对模板对象的属性进行添加
+						//也就是递归调用
                         mixin(target[prop], value, force, deepStringMixin);
                     } else {
                         target[prop] = value;
@@ -221,11 +231,19 @@ var requirejs, require, define;
 
     //Allow getting a global that is expressed in
     //dot notation, like 'a.b.c'.
+	/**
+	*	获取全局
+	*	获取用点号表示的全局属性，如果a.b.c
+	*/
     function getGlobal(value) {
+		//如果参数为假，直接返回
         if (!value) {
             return value;
         }
+		//定义一个变量
+		//此处global为最外层的IIFE传过来的this
         var g = global;
+		//用.分割value
         each(value.split('.'), function(part) {
             g = g[part];
         });
@@ -260,32 +278,44 @@ var requirejs, require, define;
     }
 
     /**
-     * 如果requirejs已定义，并且requirejs是函数，避免重写已经存在的requirejs实例
+     * 如果requirejs已定义，并且requirejs是函数，
+	 * 避免重写已经存在的requirejs实例
      */
     if (typeof requirejs !== 'undefined') {
         if (isFunction(requirejs)) {
             //Do not overwrite an existing requirejs instance.
             return;
         }
+		
+		//如果已经存在requrejs，使用cfg缓存requirejs
         cfg = requirejs;
+		//然后释放requirejs,重置为undefined
         requirejs = undefined;
     }
 
     //Allow for a require config object
+	//运行一个require对象
     if (typeof require !== 'undefined' && !isFunction(require)) {
         //assume it is a config object.
+		//存储为一个配置对象
         cfg = require;
+		//释放require
         require = undefined;
     }
 
+	
+	//创建新的上下文环境
     function newContext(contextName) {
         var inCheckLoaded, Module, context, handlers,
             checkLoadedTimeoutId,
+			//默认配置,用来加速normalize方法
             config = {
                 //Defaults. Do not set a default for map
                 //config to speed up normalize(), which
                 //will run faster if there is no default.
+				//默认等待时间7秒
                 waitSeconds: 7,
+				//默认baseUrl为当前路径
                 baseUrl: './',
                 paths: {},
                 bundles: {},
@@ -293,10 +323,13 @@ var requirejs, require, define;
                 shim: {},
                 config: {}
             },
+			
+			
             registry = {},
             //registry of just enabled modules, to speed
             //cycle breaking code when lots of modules
             //are registered, but not activated.
+			//enabledRegisty对象存储被注册但为被激活的模块
             enabledRegistry = {},
             undefEvents = {},
             defQueue = [],
@@ -437,18 +470,20 @@ var requirejs, require, define;
             return pkgMain ? pkgMain : name;
         }
         /**
-         * 移除script
+         * 根据参数name移除相关的script节点
          */
         function removeScript(name) {
             if (isBrowser) {
-                //循环页面内的script节点
+                //循环页面内的所有script节点
                 each(scripts(), function(scriptNode) {
                     /**
-                     *如果scriptNode的data-requiremodule属性值等于name 且data-requirecontext属性值等于context.contextName
+                     *如果scriptNode的data-requiremodule属性值等于name
+					 *且data-requirecontext属性值等于context.contextName
                      *移除该scriptNode节点，返回true
                      */
                     if (scriptNode.getAttribute('data-requiremodule') === name &&
                         scriptNode.getAttribute('data-requirecontext') === context.contextName) {
+						//从该节点的父节点中移除该节点
                         scriptNode.parentNode.removeChild(scriptNode);
                         return true;
                     }
@@ -651,21 +686,25 @@ var requirejs, require, define;
         /**
          * Internal method to transfer globalQueue items to this context's
          * defQueue.
+		 * 定义一个内部方法用来把全局队列的项转移到运行上下问的队列中
          */
         function takeGlobalQueue() {
             //Push all the globalDefQueue items into the context's defQueue
             if (globalDefQueue.length) {
+				//循环全局队列，把每一项复制到运行上下文队列中
                 each(globalDefQueue, function(queueItem) {
                     var id = queueItem[0];
                     if (typeof id === 'string') {
                         context.defQueueMap[id] = true;
                     }
                     defQueue.push(queueItem);
-                });
+                });‘
+				//循环结束，情况全局队列
                 globalDefQueue = [];
             }
         }
 
+		//定义一个handlers对象，该对象有 require，exports ，module 三个方法
         handlers = {
             'require': function(mod) {
                 if (mod.require) {
@@ -1315,6 +1354,8 @@ var requirejs, require, define;
             }
         }
 
+		
+		//封装一个事件解除绑定函数
         function removeListener(node, func, name, ieName) {
             //Favor detachEvent because of IE9
             //issue, see attachEvent/addEventListener comment elsewhere

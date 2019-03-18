@@ -1,14 +1,14 @@
 /* Zepto v1.2.0 - zepto event ajax form ie - zeptojs.com/license */
 (function(global, factory) {
-	//如果支持AMD标准，使用AMD标准封装	
   if (typeof define === 'function' && define.amd)
     define(function() { return factory(global) })
   else
     factory(global)
 }(this, function(window) {
-
-	//定义一个立即执行的匿名函数表达式IIFE(Immediately-Invoked Function Expression)
+	
+	//定义一个Zepto对象
   var Zepto = (function() {
+	//定义一些预置变量和方法
   var undefined, key, $, classList, emptyArray = [], concat = emptyArray.concat, filter = emptyArray.filter, slice = emptyArray.slice,
     document = window.document,
     elementDisplay = {}, classCache = {},
@@ -20,6 +20,7 @@
     capitalRE = /([A-Z])/g,
 
     // special attributes that should be get/set via method calls
+	//指定一些特殊方法可以直接用来获取和设置属性
     methodAttributes = ['val', 'css', 'html', 'text', 'data', 'width', 'height', 'offset'],
 
     adjacencyOperators = [ 'after', 'prepend', 'before', 'append' ],
@@ -53,20 +54,23 @@
       'contenteditable': 'contentEditable'
     },
 	
-	/**
-	* 判断是否是数组，如果数组支持，
-	* 调用Array自身的isArray方法，
-	* 如果没有，使用instanceof Array
-	*/
+	//判断是否为数组，如果Array对象支持isArray,直接调用，不支持则判断是不是Array对象的实例
     isArray = Array.isArray ||
       function(object){ return object instanceof Array }
 
   zepto.matches = function(element, selector) {
+	  //如果element或者selector不存在，或者element不是元素类型，返回false
     if (!selector || !element || element.nodeType !== 1) return false
+	
+	//浏览器兼容性处理
     var matchesSelector = element.matches || element.webkitMatchesSelector ||
                           element.mozMatchesSelector || element.oMatchesSelector ||
                           element.matchesSelector
+	//matchesSelector()方法接收一个CSS选择符参数，
+	//如果调用元素与该选择符相匹配，返回true；否则返回false					  
     if (matchesSelector) return matchesSelector.call(element, selector)
+		
+	//如果不支持matchesSelector方法
     // fall back to performing a selector:
     var match, parent = element.parentNode, temp = !parent
     if (temp) (parent = tempParent).appendChild(element)
@@ -75,15 +79,34 @@
     return match
   }
 
+  
+  //判断类型
   function type(obj) {
+	  /**
+	  *	toString = class2type.toString,
+	  * 对象有toString方法，其他类型没有，所以使用call方法，借用对象的toString方法，
+	  * 返回类似 "[object Object]" "[object Function]" "[object Number]" 这样的结果
+	  * 上面将class2type初始化为一个对象，在后面的某处，调用$.each方法，将class2type赋值为一个对象
+
+		class2type = {
+		"[object Boolean]": "boolean",
+		"[object Number]": "number"
+		...
+		}
+		
+		然后就映射出对应的类型了
+	  */
+	  
     return obj == null ? String(obj) :
       class2type[toString.call(obj)] || "object"
   }
 
   function isFunction(value) { return type(value) == "function" }
+  //判断是否是window对象，window对象下有window属性，document对象有DOCUMENT_NODE属性
   function isWindow(obj)     { return obj != null && obj == obj.window }
   function isDocument(obj)   { return obj != null && obj.nodeType == obj.DOCUMENT_NODE }
   function isObject(obj)     { return type(obj) == "object" }
+  //判断是否为纯对象，纯对象是对象但不能是window，而且原型和Object的原型相同
   function isPlainObject(obj) {
     return isObject(obj) && !isWindow(obj) && Object.getPrototypeOf(obj) == Object.prototype
   }
@@ -98,8 +121,22 @@
     )
   }
 
+  //定义compact,压缩数组，通过call方法借用用数组的filter方法，将数组中的undefined null 删掉
   function compact(array) { return filter.call(array, function(item){ return item != null }) }
+  /**
+  * 定义fltten方法,使用apply调用数组的contact方法，
+  *	注意用的是apply,apply里第二个参数是我们传入的array参数，
+  * 等价于[].contact(array[0],array[1],array[2],...,array[array.length-1])
+  * 所以就把array扁平化了，但因为只是用的apply的第二个参数是数组的特性，
+  * 没有使用循环，只能应对一层，无法做多层处理
+  */
   function flatten(array) { return array.length > 0 ? $.fn.concat.apply([], array) : array }
+  
+  /**
+  * 驼峰处理
+  * 将 abc-def-gh使用正则匹配，replace()方法的第一个参数是一个RegExp 对象，第二个起的参数则代表第n-1个括号匹配的字符串
+  * 然后将匹配的子串转为大写返回，没有匹配项则直接替换掉-
+  */
   camelize = function(str){ return str.replace(/-+(.)?/g, function(match, chr){ return chr ? chr.toUpperCase() : '' }) }
   function dasherize(str) {
     return str.replace(/::/g, '/')
@@ -108,6 +145,9 @@
            .replace(/_/g, '-')
            .toLowerCase()
   }
+  
+  //对数组做唯一化处理
+  //监测数组元素第一次出现的位置和元素的索引是不是相同，如果相同，证明是第一次出现，放入到数组中，否则过滤掉
   uniq = function(array){ return filter.call(array, function(item, idx){ return array.indexOf(item) == idx }) }
 
   function classRE(name) {
@@ -188,6 +228,7 @@
 
   // `$.zepto.isZ` should return `true` if the given object is a Zepto
   // collection. This method can be overridden in plugins.
+  //判断是否是zepto.z的实例
   zepto.isZ = function(object) {
     return object instanceof zepto.Z
   }
@@ -245,56 +286,27 @@
     return zepto.init(selector, context)
   }
 
-
-  /**
-  * 封装extend方法，拷贝方法，三个参数分别是目标对象，源对象，是否深拷贝
-  */
   function extend(target, source, deep) {
-  	//循环源对象
     for (key in source)
-    //如果是深拷贝，并且源对象的元素是也是Object或Array
       if (deep && (isPlainObject(source[key]) || isArray(source[key]))) {
-
-      	//如果源对象的元素是Ojbect，并且目标对象元素不是Object，
         if (isPlainObject(source[key]) && !isPlainObject(target[key]))
-        	//先设置模板对象元素为Object
           target[key] = {}
-      	//如果源对象的元素是Array，并且目标对象元素不是Array
         if (isArray(source[key]) && !isArray(target[key]))
-        	//先设置目标对象元素为Array
           target[key] = []
-          //然后再调用extend方法本身，将目标对象元素，源对象元素，
         extend(target[key], source[key], deep)
       }
-      //如果不是，直接将元素对应设置到target对象元素中
       else if (source[key] !== undefined) target[key] = source[key]
-
-
   }
 
   // Copy all but undefined properties from one or more
   // objects to the `target` object.
-  /**
-  * 给$对象添加对象拷贝方法
-  * target为第一个参数，只是形参，换成bullshit也可以
-  */
-  
   $.extend = function(target){
-	//创建变量deep,记录是深拷贝
-	//args为第二个参数开始的数组
     var deep, args = slice.call(arguments, 1)
-	//如果第一个参数为布尔值
     if (typeof target == 'boolean') {
-		//deep的值就为$.extend方法传入的第一个参数
       deep = target
-	  //target等于args调用unshift方法，从头部删除掉的元素，
-	  //也就是$.extend方法的第二个参数
       target = args.shift()
     }
-	
-	//对剩下的元素，循环调用上面定义好的extend方法
     args.forEach(function(arg){ extend(target, arg, deep) })
-	//返回extend后的目标元素
     return target
   }
 
@@ -322,23 +334,6 @@
     return selector == null ? $(nodes) : $(nodes).filter(selector)
   }
 
-	
-  /**
-  * 判断parentNode 是否包含childNode
-  *	如果系统支持contains方法，直接调用parent.contains(node);
-  *	如果系统不支持，使用while循环，判断节点是否相等，等同于
-  * function isContains(){
-	  while(node.parentNode){
-	  
-		if(node.parentNode==parent){
-			return true
-		}
-		node=node.parentNode;
-	  }
-	  
-	  return false;
-	}
-  */
   $.contains = document.documentElement.contains ?
     function(parent, node) {
       return parent !== node && parent.contains(node)
@@ -354,7 +349,6 @@
   }
 
   function setAttribute(node, name, value) {
-  	//如果没有传入属性值，直接移除该属性，否则，设置该属性
     value == null ? node.removeAttribute(name) : node.setAttribute(name, value)
   }
 
@@ -396,8 +390,6 @@
   $.isArray = isArray
   $.isPlainObject = isPlainObject
 
-
-  //判断一个对象是否为空（没有属性）
   $.isEmptyObject = function(obj) {
     var name
     for (name in obj) return false
@@ -411,31 +403,16 @@
       !isNaN(num) && isFinite(num) || false
   }
 
-  //判断是否在数组内
   $.inArray = function(elem, array, i){
-  	//return [].indexOf.call(array,element,i)
     return emptyArray.indexOf.call(array, elem, i)
   }
 
   $.camelCase = camelize
-
-  /**
-	* trim方法，直接调用String自身的方法，
-	* ES3中，需要自己实现trim
-	*	
-		$.trim=function(str){
-			return null?:'':(String.prototype.trim?String.prototype.trim.call(str): str.replace(/(^\s*)|(\s*$)/g, ''));
-		}
-  */
+  
+  //trim方法，调用String对象的trim方法
   $.trim = function(str) {
-  	
     return str == null ? "" : String.prototype.trim.call(str)
-
   }
-
-
-
-
 
   // plugin compatibility
   $.uuid = 0
@@ -443,17 +420,8 @@
   $.expr = { }
   $.noop = function() {}
 
-	/**
-	* 封装map方法，参数为元素，回调函数callback,
-	* 回调函数有两个参数（value和key或者item和index） ,
-	* 第一个参数是当前的元素项，
-	* 第二个参数为当前元素索引
-	* 循环结束后，返回回调函数调用过后的返回值组成的新数组
-	*/
   $.map = function(elements, callback){
     var value, values = [], i, key
-	
-	//如果是类数组元素，直接使用for循环,
     if (likeArray(elements))
       for (i = 0; i < elements.length; i++) {
         value = callback(elements[i], i)
@@ -467,7 +435,6 @@
     return flatten(values)
   }
 
-  
   $.each = function(elements, callback){
     var i, key
     if (likeArray(elements)) {
@@ -1023,7 +990,11 @@
   return $
 })()
 
+
+//把Zepto对象暴露到全局
 window.Zepto = Zepto
+
+//如果$不存在，$就是暴露到全局作用域下的Zepto对象
 window.$ === undefined && (window.$ = Zepto)
 
 ;(function($){
@@ -1428,7 +1399,6 @@ window.$ === undefined && (window.$ = Zepto)
     return xhr
   }
 
-  //定义ajax默认配置项
   $.ajaxSettings = {
     // Default type of request
     type: 'GET',
@@ -1618,10 +1588,12 @@ window.$ === undefined && (window.$ = Zepto)
     }
   }
 
+  //$.get就是返回$.ajax方法的调用
   $.get = function(/* url, data, success, dataType */){
     return $.ajax(parseArguments.apply(null, arguments))
   }
 
+  //$.post方法也是返回$.ajax方法的调用，不同的是发送method为POST方式
   $.post = function(/* url, data, success, dataType */){
     var options = parseArguments.apply(null, arguments)
     options.type = 'POST'
@@ -1696,6 +1668,7 @@ window.$ === undefined && (window.$ = Zepto)
     return result
   }
 
+  //给原型添加序列化方法
   $.fn.serialize = function(){
     var result = []
     this.serializeArray().forEach(function(elm){

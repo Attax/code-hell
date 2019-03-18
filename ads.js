@@ -217,6 +217,10 @@
 		
 	}
 	
+	if(!window.ADS){
+		window.ADS={};
+	}
+	
 
 	window.ADS=new ads();
 	
